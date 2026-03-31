@@ -13,6 +13,13 @@ import { ResponseMatchDto } from '../model/response-match.dto';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @ApiOperation({ summary: 'Geef alle users terug met hun skills' })
+  @ApiResponse({ status: 200, type: [ResponseUserDto] })
+  @Get()
+  getAllUsers() {
+    return this.usersService.getAllUsers();
+  }
+
   // De @Body() decorator haalt de request body op en valideert hem via CreateUserDto.
   @ApiOperation({ summary: 'Maak een nieuwe user aan met skills' })
   @ApiResponse({ status: 201, type: ResponseUserDto })

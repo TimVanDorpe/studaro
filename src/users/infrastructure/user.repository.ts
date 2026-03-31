@@ -20,6 +20,13 @@ export class UserRepository {
     private readonly repo: Repository<User>,
   ) {}
 
+  async findAll(): Promise<User[]> {
+    return this.repo
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.skills', 'skill')
+      .getMany();
+  }
+
   async findByEmail(email: string): Promise<User | null> {
     return this.repo.findOne({ where: { email } });
   }

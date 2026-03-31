@@ -23,6 +23,11 @@ export class UsersService {
     private readonly matchingService: MatchingService,
   ) {}
 
+  async getAllUsers(): Promise<ResponseUserDto[]> {
+    const users = await this.userRepo.findAll();
+    return users.map((u) => ResponseUserDto.fromEntity(u, u.skills));
+  }
+
   async createUser(dto: CreateUserDto): Promise<ResponseUserDto> {
     const existing = await this.userRepo.findByEmail(dto.email);
     if (existing) {
