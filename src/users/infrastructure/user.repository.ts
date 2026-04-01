@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { QueryRunner, Repository } from 'typeorm';
 import { User } from './user.entity';
 
 // De UserRepository bevat alle DB-operaties voor users.
@@ -12,6 +12,11 @@ import { User } from './user.entity';
 //   ook in één query. Dit is de basis voor de matching.
 // - addSkill — voegt een skill toe aan de junction tabel via de TypeORM relation API,
 //   zonder de volledige user te hoeven laden.
+//
+// v2: create() en addSkill() accepteren een optionele QueryRunner.
+// Als een QueryRunner meegegeven wordt, voert de methode zijn query uit binnen
+// de actieve transactie van die runner. Zonder QueryRunner werkt alles zoals vóór v2
+// (auto-commit, los van enige transactie).
 
 @Injectable()
 export class UserRepository {
@@ -31,14 +36,20 @@ export class UserRepository {
     return this.repo.findOne({ where: { email } });
   }
 
-  async create(name: string, email: string): Promise<User> {
-    return this.repo.save(this.repo.create({ name, email }));
+  // v2: queryRunner parameter toegevoegd. Als meegegeven, gebruikt deze methode de
+  // manager van de actieve transactie zodat de INSERT onderdeel wordt van die transactie.
+  async create(name: string, email: string, queryRunner?: QueryRunner): Promise<User> {
+    const manager = queryRunner ? queryRunner.manager : this.repo.manager;
+    return manager.save(User, manager.create(User, { name, email }));
   }
 
+  // v2: queryRunner parameter toegevoegd. De relation-query wordt uitgevoerd via de
+  // manager van de actieve transactie — dezelfde connectie als create() hierboven.
   // Voegt een skill toe aan de ManyToMany-junction tabel zonder de volledige
   // user entity te laden. TypeORM vertaalt dit naar een INSERT in 'user_skills'.
-  async addSkill(userId: string, skillId: string): Promise<void> {
-    await this.repo
+  async addSkill(userId: string, skillId: string, queryRunner?: QueryRunner): Promise<void> {
+    const manager = queryRunner ? queryRunner.manager : this.repo.manager;
+    await manager
       .createQueryBuilder()
       .relation(User, 'skills')
       .of(userId)
