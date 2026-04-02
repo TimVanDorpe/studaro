@@ -1,5 +1,3 @@
-// Matching lives in users/ because it currently only serves the user-match endpoint.
-// Move to src/matching/ if it gains AI scoring, weights, or cross-feature queries.
 import { Injectable, Logger } from '@nestjs/common';
 import { User } from '../infrastructure/user.entity';
 import { Skill } from '../../skills/infrastructure/skill.entity';
@@ -16,15 +14,13 @@ import { Skill } from '../../skills/infrastructure/skill.entity';
 //   Scores of 0 are filtered out (no shared skills at all)
 //   and the result is sorted from high to low.
 
-// NestJS decorator — makes this class injectable via dependency injection.
-// Without this, UsersService cannot receive this class in its constructor.
 @Injectable()
 export class MatchingService {
   private readonly logger = new Logger(MatchingService.name);
 
   computeMatches(
-    target: User,   // the user for whom we are finding matches
-    others: User[], // all other users (already filtered outside this method)
+    target: User,   
+    others: User[],
   ): Array<{ user: User; skills: Skill[]; score: number }> {
 
     const start = Date.now();

@@ -82,7 +82,9 @@ describe('UsersService', () => {
       userRepo.create.mockResolvedValue({ id: 'u1', name: 'Alice', email: 'alice@test.com' });
       skillRepo.findOrCreate.mockResolvedValue(skill);
       userRepo.addSkill.mockResolvedValue(undefined);
-      userRepo.findByIdWithSkills.mockResolvedValue(user);
+      const userWithSkills = makeUser('u1', 'alice@test.com', []);
+      userWithSkills.skills = [skill];
+      userRepo.findByIdWithSkills.mockResolvedValue(userWithSkills);
 
       const result = await service.createUser({ name: 'Alice', email: 'alice@test.com', skills: ['typescript'] });
 
