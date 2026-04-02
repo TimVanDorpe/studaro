@@ -12,8 +12,8 @@ export class Skill {
   @CreateDateColumn()
   createdAt: Date;
 
-  // Inverse kant van de ManyToMany-relatie — geen @JoinTable() hier,
-  // want de owning side (en dus de junction tabel) wordt beheerd door User.
+  // Inverse side of the ManyToMany relation — no @JoinTable() here,
+  // because the owning side (and thus the junction table) is managed by User.
   @ManyToMany(() => User, (user) => user.skills)
   users: User[];
 }

@@ -3,21 +3,21 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
 import { Skill } from './skill.entity';
 
-// De SkillRepository bevat alle DB-operaties voor skills.
+// SkillRepository contains all DB operations for skills.
 //
-// - findOrCreate — zoekt een skill op naam (lowercase), of maakt hem aan als hij
-//   niet bestaat. Dit voorkomt duplicaten zoals 'TypeScript' en 'typescript'.
-// - findAllWithUserCount — één SQL query met een LEFT JOIN en GROUP BY om het aantal
-//   users per skill te tellen. Efficiënter dan voor elke skill apart een query doen.
+// - findOrCreate — looks up a skill by name (lowercase), or creates it if it
+//   does not exist. This prevents duplicates such as 'TypeScript' and 'typescript'.
+// - findAllWithUserCount — one SQL query with a LEFT JOIN and GROUP BY to count the number
+//   of users per skill. More efficient than running a separate query for each skill.
 //
-// v2: findOrCreate gebruikt nu een DB-level upsert (INSERT ... ON CONFLICT DO NOTHING)
-// in plaats van een aparte SELECT gevolgd door een INSERT.
-// Probleem vóór v2 (race condition): twee gelijktijdige POST /users-requests met
-// dezelfde nieuwe skill passeerden allebei de findOne-check (beide zagen: niet gevonden),
-// gingen allebei naar de save(), en de tweede insert crashte op de UNIQUE constraint van
-// de 'name'-kolom in de skills-tabel.
-// Nu: PostgreSQL handelt het conflict atomair af op DB-niveau. De tweede INSERT doet
-// niets (DO NOTHING) en daarna lezen we de bestaande rij terug via findOne.
+// v2: findOrCreate now uses a DB-level upsert (INSERT ... ON CONFLICT DO NOTHING)
+// instead of a separate SELECT followed by an INSERT.
+// Problem before v2 (race condition): two concurrent POST /users requests with
+// the same new skill both passed the findOne check (both saw: not found),
+// both proceeded to save(), and the second insert crashed on the UNIQUE constraint of
+// the 'name' column in the skills table.
+// Now: PostgreSQL handles the conflict atomically at the DB level. The second INSERT does
+// nothing (DO NOTHING) and we then read the existing row back via findOne.
 
 @Injectable()
 export class SkillRepository {
@@ -26,16 +26,16 @@ export class SkillRepository {
     private readonly repo: Repository<Skill>,
   ) {}
 
-  // v2: queryRunner parameter toegevoegd zodat deze methode binnen de transactie van
-  // UsersService.createUser() kan draaien — zelfde connectie als de user-insert.
+  // v2: queryRunner parameter added so this method can run within the transaction of
+  // UsersService.createUser() — same connection as the user insert.
   async findOrCreate(name: string, queryRunner?: QueryRunner): Promise<Skill> {
     const normalized = name.toLowerCase();
     const manager = queryRunner ? queryRunner.manager : this.repo.manager;
 
-    // v2: INSERT ... ON CONFLICT DO NOTHING — atomaire upsert op DB-niveau.
-    // Als de skill al bestaat, doet PostgreSQL niets en blijft de bestaande rij intact.
-    // Dit elimineert de race condition waarbij twee requests tegelijk dezelfde
-    // nieuwe skill probeerden in te voegen en de tweede op een UNIQUE-fout vastliep.
+    // v2: INSERT ... ON CONFLICT DO NOTHING — atomic upsert at the DB level.
+    // If the skill already exists, PostgreSQL does nothing and the existing row remains intact.
+    // This eliminates the race condition where two requests simultaneously tried to insert
+    // the same new skill and the second one failed with a UNIQUE error.
     await manager
       .createQueryBuilder()
       .insert()
@@ -44,14 +44,14 @@ export class SkillRepository {
       .orIgnore()
       .execute();
 
-    // Na de upsert lezen we de skill terug — gegarandeerd aanwezig, ongeacht of
-    // deze request hem aanmaakte of een andere request hem net vóór ons aanmaakte.
+    // After the upsert we read the skill back — guaranteed to exist, regardless of whether
+    // this request created it or another request created it just before us.
     return manager.findOneOrFail(Skill, { where: { name: normalized } });
   }
 
   async findAllWithUserCount(): Promise<Array<{ id: string; name: string; userCount: string }>> {
-    // JOIN op de ManyToMany inverse kant ('skill.users') — TypeORM gebruikt
-    // automatisch de junction tabel 'user_skills'. COUNT telt het aantal users per skill.
+    // JOIN on the ManyToMany inverse side ('skill.users') — TypeORM automatically uses
+    // the junction table 'user_skills'. COUNT counts the number of users per skill.
     return this.repo
       .createQueryBuilder('skill')
       .select('skill.id', 'id')

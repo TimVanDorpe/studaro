@@ -3,20 +3,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { QueryRunner, Repository } from 'typeorm';
 import { User } from './user.entity';
 
-// De UserRepository bevat alle DB-operaties voor users.
+// UserRepository contains all DB operations for users.
 //
-// - findByIdWithSkills — haalt een user op inclusief al zijn skills in één query
-//   via leftJoinAndSelect op de ManyToMany-relatie. Zonder join zou je N+1 queries
-//   krijgen (één voor de user, dan één per skill).
-// - findAllWithSkillsExcluding — haalt alle andere users op met hun skills,
-//   ook in één query. Dit is de basis voor de matching.
-// - addSkill — voegt een skill toe aan de junction tabel via de TypeORM relation API,
-//   zonder de volledige user te hoeven laden.
+// - findByIdWithSkills — fetches a user including all their skills in one query
+//   via leftJoinAndSelect on the ManyToMany relation. Without the join you would get N+1 queries
+//   (one for the user, then one per skill).
+// - findAllWithSkillsExcluding — fetches all other users with their skills,
+//   also in one query. This is the basis for matching.
+// - addSkill — adds a skill to the junction table via the TypeORM relation API,
+//   without needing to load the full user entity.
 //
-// v2: create() en addSkill() accepteren een optionele QueryRunner.
-// Als een QueryRunner meegegeven wordt, voert de methode zijn query uit binnen
-// de actieve transactie van die runner. Zonder QueryRunner werkt alles zoals vóór v2
-// (auto-commit, los van enige transactie).
+// v2: create() and addSkill() accept an optional QueryRunner.
+// When a QueryRunner is provided, the method executes its query within
+// the active transaction of that runner. Without a QueryRunner everything works as before v2
+// (auto-commit, independent of any transaction).
 
 @Injectable()
 export class UserRepository {
@@ -36,17 +36,17 @@ export class UserRepository {
     return this.repo.findOne({ where: { email } });
   }
 
-  // v2: queryRunner parameter toegevoegd. Als meegegeven, gebruikt deze methode de
-  // manager van de actieve transactie zodat de INSERT onderdeel wordt van die transactie.
+  // v2: queryRunner parameter added. When provided, this method uses the
+  // manager of the active transaction so the INSERT becomes part of that transaction.
   async create(name: string, email: string, queryRunner?: QueryRunner): Promise<User> {
     const manager = queryRunner ? queryRunner.manager : this.repo.manager;
     return manager.save(User, manager.create(User, { name, email }));
   }
 
-  // v2: queryRunner parameter toegevoegd. De relation-query wordt uitgevoerd via de
-  // manager van de actieve transactie — dezelfde connectie als create() hierboven.
-  // Voegt een skill toe aan de ManyToMany-junction tabel zonder de volledige
-  // user entity te laden. TypeORM vertaalt dit naar een INSERT in 'user_skills'.
+  // v2: queryRunner parameter added. The relation query is executed via the
+  // manager of the active transaction — the same connection as create() above.
+  // Adds a skill to the ManyToMany junction table without loading the full
+  // user entity. TypeORM translates this into an INSERT into 'user_skills'.
   async addSkill(userId: string, skillId: string, queryRunner?: QueryRunner): Promise<void> {
     const manager = queryRunner ? queryRunner.manager : this.repo.manager;
     await manager
@@ -57,8 +57,8 @@ export class UserRepository {
   }
 
   async findByIdWithSkills(id: string): Promise<User | null> {
-    // leftJoinAndSelect laadt de skills in dezelfde query via de junction tabel —
-    // TypeORM genereert automatisch de JOIN op 'user_skills'.
+    // leftJoinAndSelect loads skills in the same query via the junction table —
+    // TypeORM automatically generates the JOIN on 'user_skills'.
     return this.repo
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.skills', 'skill')

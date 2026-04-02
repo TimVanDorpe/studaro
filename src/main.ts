@@ -6,17 +6,17 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Sta requests toe van de Vite dev-server (poort 5173).
-  // X-API-Key wordt doorgelaten zodat de ApiKeyGuard hem kan lezen.
+  // Allow requests from the Vite dev server (port 5173).
+  // X-API-Key is passed through so the ApiKeyGuard can read it.
   app.enableCors({
     origin: 'http://localhost:5173',
     allowedHeaders: ['Content-Type', 'X-API-Key'],
   });
 
-  // Globale validatiepipe op basis van class-validator decorators in de DTOs.
-  // - whitelist: verwijdert velden die niet in de DTO staan
-  // - forbidNonWhitelisted: gooit een fout als er onbekende velden meegegeven worden
-  // - transform: zet raw JSON automatisch om naar de juiste DTO class
+  // Global validation pipe based on class-validator decorators in the DTOs.
+  // - whitelist: removes fields not declared in the DTO
+  // - forbidNonWhitelisted: throws an error if unknown fields are provided
+  // - transform: automatically converts raw JSON to the correct DTO class
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -25,12 +25,12 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger UI beschikbaar op /api
-  // addBearerAuth() voegt een veld toe in de UI om de X-API-Key in te geven
-  // voor beveiligde endpoints (GET /skills).
+  // Swagger UI available at /api
+  // addApiKey() adds a field in the UI to enter the X-API-Key
+  // for secured endpoints (GET /skills).
   const config = new DocumentBuilder()
     .setTitle('Studaro API')
-    .setDescription('Backend API voor skill-gebaseerde user matching')
+    .setDescription('Backend API for skill-based user matching')
     .setVersion('1.0')
     .addApiKey({ type: 'apiKey', in: 'header', name: 'X-API-Key' }, 'X-API-Key')
     .build();

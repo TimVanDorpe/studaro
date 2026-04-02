@@ -7,8 +7,8 @@ import { UsersController } from './controller/users.controller';
 import { MatchingService } from './service/matching.service';
 import { SkillsModule } from '../skills/skills.module';
 
-// UserSkill is niet langer nodig — de junction tabel 'user_skills' wordt
-// automatisch beheerd door TypeORM via de @ManyToMany/@JoinTable decorators op User.
+// UserSkill is no longer needed — the junction table 'user_skills' is
+// automatically managed by TypeORM via the @ManyToMany/@JoinTable decorators on User.
 @Module({
   imports: [TypeOrmModule.forFeature([User]), SkillsModule],
   controllers: [UsersController],

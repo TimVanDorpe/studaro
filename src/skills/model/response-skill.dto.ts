@@ -7,10 +7,10 @@ export class ResponseSkillDto {
   @ApiProperty({ example: 'typescript' })
   name: string;
 
-  //  Belangrijk detail: PostgreSQL's COUNT() functie geeft altijd een string terug,
-  // zelfs al is het een getal. Daarom gebruiken we parseInt(row.userCount, 10)
-  // — anders zou de API "userCount": "5" teruggeven in plaats van "userCount": 5.
-  @ApiProperty({ example: 42, description: 'Aantal users dat deze skill heeft' })
+  // Important detail: PostgreSQL's COUNT() function always returns a string,
+  // even when the value is a number. That is why we use parseInt(row.userCount, 10)
+  // — otherwise the API would return "userCount": "5" instead of "userCount": 5.
+  @ApiProperty({ example: 42, description: 'Number of users that have this skill' })
   userCount: number;
 
   static fromRaw(row: { id: string; name: string; userCount: string }): ResponseSkillDto {

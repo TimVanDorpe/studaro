@@ -15,10 +15,10 @@ export class User {
   @CreateDateColumn()
   createdAt: Date;
 
-  // ManyToMany: één user kan meerdere skills hebben, één skill kan bij meerdere users horen.
-  // @JoinTable() staat altijd op de "owning side" van de relatie — hier dus bij User.
-  // TypeORM maakt automatisch een junction tabel 'user_skills' aan met kolommen
-  // user_id en skill_id. Er is geen aparte entity of handmatige config nodig.
+  // ManyToMany: one user can have multiple skills, one skill can belong to multiple users.
+  // @JoinTable() always goes on the "owning side" of the relation — here on User.
+  // TypeORM automatically creates a junction table 'user_skills' with columns
+  // user_id and skill_id. No separate entity or manual config is needed.
   @ManyToMany(() => Skill, (skill) => skill.users)
   @JoinTable({ name: 'user_skills' })
   skills: Skill[];

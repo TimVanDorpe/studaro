@@ -1,11 +1,11 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-  // Een Guard in NestJS beslist of een request mag doorgaan. Deze guard leest de X-API-Key header en
-  // vergelijkt die met de waarde in .env.
+// A Guard in NestJS decides whether a request is allowed to proceed. This guard reads the X-API-Key header and
+// compares it with the value in .env.
 
-  // Belangrijk: we gebruiken @UseGuards(ApiKeyGuard) (de klasse zelf, niet new ApiKeyGuard()), zodat
-  // NestJS's DI-systeem ConfigService kan injecteren.
+// Important: we use @UseGuards(ApiKeyGuard) (the class itself, not new ApiKeyGuard()), so that
+// NestJS's DI system can inject ConfigService.
 @Injectable()
 export class ApiKeyGuard implements CanActivate {
   constructor(private readonly configService: ConfigService) {}

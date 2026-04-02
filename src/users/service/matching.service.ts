@@ -1,67 +1,67 @@
-// Matching leeft in users/ omdat het momenteel enkel de user-match endpoint bedient.
-// Verplaats naar src/matching/ als het AI-scoring, gewichten of cross-feature queries krijgt.
+// Matching lives in users/ because it currently only serves the user-match endpoint.
+// Move to src/matching/ if it gains AI scoring, weights, or cross-feature queries.
 import { Injectable, Logger } from '@nestjs/common';
 import { User } from '../infrastructure/user.entity';
 import { Skill } from '../../skills/infrastructure/skill.entity';
 
-// Het hart van de applicatie: de Jaccard-similariteitsberekening.
+// The core of the application: the Jaccard similarity calculation.
 //
 //   Jaccard = |A ∩ B| / |A ∪ B|
 //
-//   Voorbeeld: Alice heeft {TypeScript, React, Node}, Bob heeft {TypeScript, Vue, Node}:
-//   - Intersectie: {TypeScript, Node} → 2
-//   - Unie: {TypeScript, React, Node, Vue} → 4
+//   Example: Alice has {TypeScript, React, Node}, Bob has {TypeScript, Vue, Node}:
+//   - Intersection: {TypeScript, Node} → 2
+//   - Union: {TypeScript, React, Node, Vue} → 4
 //   - Score: 2/4 = 0.5
 //
-//   Scores van 0 worden gefilterd (geen enkele gemeenschappelijke skill)
-//   en het resultaat wordt van hoog naar laag gesorteerd.
+//   Scores of 0 are filtered out (no shared skills at all)
+//   and the result is sorted from high to low.
 
-// NestJS decorator — maakt deze class injecteerbaar via dependency injection.
-// Zonder dit kan UsersService deze class niet ontvangen in zijn constructor.
+// NestJS decorator — makes this class injectable via dependency injection.
+// Without this, UsersService cannot receive this class in its constructor.
 @Injectable()
 export class MatchingService {
   private readonly logger = new Logger(MatchingService.name);
 
   computeMatches(
-    target: User,   // de user waarvoor we matches zoeken
-    others: User[], // alle andere users (al gefilterd buiten deze methode)
+    target: User,   // the user for whom we are finding matches
+    others: User[], // all other users (already filtered outside this method)
   ): Array<{ user: User; skills: Skill[]; score: number }> {
 
     const start = Date.now();
 
-    // Stap 1: verzamel de skill-ids van de target user in een Set.
-    // Set = HashSet<string> — geen duplicaten, .has() is O(1) vs O(n) bij array.
-    // Dankzij ManyToMany is user.skills direct een Skill[], geen wrapper object meer.
+    // Step 1: collect the skill IDs of the target user into a Set.
+    // Set = HashSet<string> — no duplicates, .has() is O(1) vs O(n) for arrays.
+    // Thanks to ManyToMany, user.skills is directly a Skill[], no wrapper object needed.
     const targetSkillIds = new Set(target.skills.map((s) => s.id));
 
     const results = others
-      // Stap 2: transformeer elke andere user naar een object met score.
+      // Step 2: transform each other user into an object with a score.
       .map((other) => {
-        // Zelfde als targetSkillIds maar voor deze andere user.
+        // Same as targetSkillIds but for this other user.
         const otherSkillIds = new Set(other.skills.map((s) => s.id));
 
-        // DOORSNEDE — skills die beide users hebben. Dit is de Jaccard teller (∩).
-        // [...targetSkillIds] spreidt de Set uit naar array zodat .filter() beschikbaar is.
+        // INTERSECTION — skills that both users share. This is the Jaccard numerator (∩).
+        // [...targetSkillIds] spreads the Set into an array so .filter() is available.
         const intersection = new Set(
           [...targetSkillIds].filter((id) => otherSkillIds.has(id))
         );
 
-        // UNIE — alle skills van beide users samen. Dit is de Jaccard noemer (∪).
-        // De Set verwijdert duplicaten automatisch.
+        // UNION — all skills of both users combined. This is the Jaccard denominator (∪).
+        // The Set removes duplicates automatically.
         const union = new Set([...targetSkillIds, ...otherSkillIds]);
 
-        // JACCARD SCORE: doorsnede / unie → getal tussen 0.0 en 1.0.
-        // Nul-check voorkomt deling door nul als beide users geen enkele skill hebben.
+        // JACCARD SCORE: intersection / union → number between 0.0 and 1.0.
+        // Zero-check prevents division by zero if both users have no skills at all.
         const score = union.size === 0 ? 0 : intersection.size / union.size;
 
-        // user.skills is nu direct de array van Skill objecten — geen .skill unwrap meer nodig.
+        // user.skills is now directly the array of Skill objects — no .skill unwrap needed.
         return { user: other, skills: other.skills, score };
       })
 
-      // Verwijder users met score 0 — geen enkele gemeenschappelijke skill.
+      // Remove users with score 0 — no shared skills at all.
       .filter((match) => match.score > 0)
 
-      // Sorteer van hoog naar laag (descending).
+      // Sort from high to low (descending).
       .sort((a, b) => b.score - a.score);
 
     this.logger.log(

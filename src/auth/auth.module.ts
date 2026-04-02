@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { ApiKeyGuard } from './api-key.guard';
 
-//  De AuthModule registreert de guard als provider en exporteert hem, zodat andere modules (zoals
-//   SkillsModule) de guard kunnen gebruiken zonder hem opnieuw te declareren.
+// The AuthModule registers the guard as a provider and exports it, so other modules (such as
+// SkillsModule) can use the guard without declaring it again.
 
 @Module({
   providers: [ApiKeyGuard],

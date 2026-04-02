@@ -4,20 +4,20 @@ import { SkillsService } from '../service/skills.service';
 import { ApiKeyGuard } from '../../auth/api-key.guard';
 import { ResponseSkillDto } from '../model/response-skill.dto';
 
-// Beheert het /skills endpoint.
-// Enkel toegankelijk met een geldige API key — bedoeld voor admin/intern gebruik.
+// Manages the /skills endpoint.
+// Only accessible with a valid API key — intended for admin/internal use.
 @ApiTags('skills')
 @Controller('skills')
 export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}
 
-  // @ApiSecurity('X-API-Key') toont het slotje in Swagger UI voor dit endpoint.
-  // @UseGuards(ApiKeyGuard) — controleert de X-API-Key header voor deze route.
-  // GET /skills — geeft alle skills terug met het aantal users dat ze heeft.
+  // @ApiSecurity('X-API-Key') shows the lock icon in Swagger UI for this endpoint.
+  // @UseGuards(ApiKeyGuard) — checks the X-API-Key header for this route.
+  // GET /skills — returns all skills with the number of users that have them.
   @ApiSecurity('X-API-Key')
-  @ApiOperation({ summary: 'Geef alle skills terug met hun aantal users (vereist API key)' })
+  @ApiOperation({ summary: 'Return all skills with their user count (requires API key)' })
   @ApiResponse({ status: 200, type: [ResponseSkillDto] })
-  @ApiResponse({ status: 401, description: 'Ongeldige of ontbrekende API key' })
+  @ApiResponse({ status: 401, description: 'Invalid or missing API key' })
   @UseGuards(ApiKeyGuard)
   @Get()
   findAll() {

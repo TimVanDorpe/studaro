@@ -1,8 +1,8 @@
 import { ArrayNotEmpty, IsArray, IsEmail, IsNotEmpty, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-// DTO voor het aanmaken van een user. De class-validator decorators worden
-// automatisch uitgevoerd door de globale ValidationPipe in main.ts.
+// DTO for creating a user. The class-validator decorators are
+// automatically executed by the global ValidationPipe in main.ts.
 export class CreateUserDto {
   @ApiProperty({ example: 'Jan Janssen' })
   @IsString()
@@ -13,8 +13,8 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
-  // { each: true } laat class-validator elke waarde in de array individueel valideren.
-  // Zo worden lege strings zoals "" ook geweigerd.
+  // { each: true } makes class-validator validate each value in the array individually.
+  // This ensures empty strings like "" are also rejected.
   @ApiProperty({ example: ['typescript', 'react', 'nodejs'], type: [String] })
   @IsArray()
   @ArrayNotEmpty()

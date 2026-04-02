@@ -2,12 +2,12 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SkillsService } from './skills.service';
 import { SkillRepository } from '../infrastructure/skill.repository';
 
-//  De unit tests voor SkillsService. 
-//  We mocken de repository met jest.fn() zodat er geen echte DB 
-//   nodig is. We testen:
-//   1. Dat rijen correct omgezet worden naar DTOs 
-//      (en userCount een getal is, geen string)
-//   2. Dat een lege array ook gewoon een lege array teruggeeft
+// Unit tests for SkillsService.
+// We mock the repository with jest.fn() so no real DB is needed.
+// We test:
+//   1. That rows are correctly converted to DTOs
+//      (and userCount is a number, not a string)
+//   2. That an empty array also simply returns an empty array
 
 describe('SkillsService', () => {
   let service: SkillsService;
