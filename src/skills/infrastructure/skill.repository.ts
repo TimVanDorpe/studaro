@@ -50,14 +50,18 @@ export class SkillRepository {
   }
 
   async findAllWithUserCount(): Promise<Array<{ id: string; name: string; userCount: string }>> {
-    // JOIN on the ManyToMany inverse side ('skill.users') — TypeORM automatically uses
-    // the junction table 'user_skills'. COUNT counts the number of users per skill.
+    // Direct JOIN on the junction table 'user_skills' — avoids the extra JOIN to the users table
+    // since we only need a COUNT of rows, not any user columns.
+      // SELECT skill.id AS id, skill.name AS name, COUNT(us.user_id) AS "userCount"
+      // FROM skills skill
+      // LEFT JOIN user_skills us ON us.skill_id = skill.id
+      // GROUP BY skill.id
     return this.repo
       .createQueryBuilder('skill')
       .select('skill.id', 'id')
       .addSelect('skill.name', 'name')
-      .addSelect('COUNT(user.id)', 'userCount')
-      .leftJoin('skill.users', 'user')
+      .addSelect('COUNT(us.user_id)', 'userCount')
+      .leftJoin('user_skills', 'us', 'us.skill_id = skill.id')
       .groupBy('skill.id')
       .getRawMany();
   }

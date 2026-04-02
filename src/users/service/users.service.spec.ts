@@ -1,17 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ConflictException, NotFoundException } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { UsersService } from './users.service';
 import { UserRepository } from '../infrastructure/user.repository';
 import { SkillRepository } from '../../skills/infrastructure/skill.repository';
 import { MatchingService } from './matching.service';
 import { User } from '../infrastructure/user.entity';
 import { Skill } from '../../skills/infrastructure/skill.entity';
-import { UserSkill } from '../infrastructure/user-skill.entity';
 
-
-//  De uitgebreidste test suite. We testen 6 scenario's zonder enige DB-verbinding — alles
-//   gemockt met jest.fn(). Dit is de kracht van de gelaagde architectuur: je kan businesslogica
-//   isoleren en snel testen.
+// The most comprehensive test suite. We test 6 scenarios without any DB connection — everything
+// mocked with jest.fn(). This is the power of the layered architecture: you can isolate business logic
+// and test it quickly.
 
 function makeSkill(id: string, name: string): Skill {
   const s = new Skill();
@@ -26,12 +25,7 @@ function makeUser(id: string, email: string, skillIds: string[]): User {
   u.name = 'Test';
   u.email = email;
   u.createdAt = new Date();
-  u.userSkills = skillIds.map((sid) => {
-    const us = new UserSkill();
-    us.skillId = sid;
-    us.skill = makeSkill(sid, sid);
-    return us;
-  });
+  u.skills = skillIds.map((sid) => makeSkill(sid, sid));
   return u;
 }
 
@@ -41,11 +35,25 @@ describe('UsersService', () => {
   let skillRepo: Record<string, jest.Mock>;
   let matchingService: { computeMatches: jest.Mock };
 
+  const queryRunner = {
+    connect: jest.fn(),
+    startTransaction: jest.fn(),
+    commitTransaction: jest.fn(),
+    rollbackTransaction: jest.fn(),
+    release: jest.fn(),
+  };
+
+  const dataSource = {
+    createQueryRunner: jest.fn().mockReturnValue(queryRunner),
+  };
+
   beforeEach(async () => {
+    jest.clearAllMocks();
+
     userRepo = {
       findByEmail: jest.fn(),
       create: jest.fn(),
-      createUserSkill: jest.fn(),
+      addSkill: jest.fn(),
       findByIdWithSkills: jest.fn(),
       findAllWithSkillsExcluding: jest.fn(),
     };
@@ -58,6 +66,7 @@ describe('UsersService', () => {
         { provide: UserRepository, useValue: userRepo },
         { provide: SkillRepository, useValue: skillRepo },
         { provide: MatchingService, useValue: matchingService },
+        { provide: DataSource, useValue: dataSource },
       ],
     }).compile();
 
@@ -72,7 +81,7 @@ describe('UsersService', () => {
       userRepo.findByEmail.mockResolvedValue(null);
       userRepo.create.mockResolvedValue({ id: 'u1', name: 'Alice', email: 'alice@test.com' });
       skillRepo.findOrCreate.mockResolvedValue(skill);
-      userRepo.createUserSkill.mockResolvedValue(undefined);
+      userRepo.addSkill.mockResolvedValue(undefined);
       userRepo.findByIdWithSkills.mockResolvedValue(user);
 
       const result = await service.createUser({ name: 'Alice', email: 'alice@test.com', skills: ['typescript'] });
@@ -90,7 +99,7 @@ describe('UsersService', () => {
       skillRepo.findOrCreate
         .mockResolvedValueOnce(makeSkill('s1', 'typescript'))
         .mockResolvedValueOnce(makeSkill('s2', 'react'));
-      userRepo.createUserSkill.mockResolvedValue(undefined);
+      userRepo.addSkill.mockResolvedValue(undefined);
       userRepo.findByIdWithSkills.mockResolvedValue(user);
 
       await service.createUser({ name: 'Alice', email: 'alice@test.com', skills: ['typescript', 'react'] });
