@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { UserRepository } from '../infrastructure/user.repository';
 import { SkillRepository } from '../../skills/infrastructure/skill.repository';
@@ -21,6 +21,8 @@ import { ResponseMatchDto } from '../model/response-match.dto';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly userRepo: UserRepository,
     private readonly skillRepo: SkillRepository,
@@ -31,11 +33,13 @@ export class UsersService {
   ) {}
 
   async getAllUsers(): Promise<ResponseUserDto[]> {
+    this.logger.log('Fetching all users');
     const users = await this.userRepo.findAll();
     return users.map((u) => ResponseUserDto.fromEntity(u, u.skills));
   }
 
   async createUser(dto: CreateUserDto): Promise<ResponseUserDto> {
+    this.logger.log(`Creating user ${dto.name} (${dto.email})`);
     const existing = await this.userRepo.findByEmail(dto.email);
     if (existing) {
       throw new ConflictException(`User with email ${dto.email} already exists`);
@@ -65,6 +69,7 @@ export class UsersService {
 
       // Laad de user opnieuw inclusief zijn skills via de ManyToMany-relatie.
       const userWithSkills = await this.userRepo.findByIdWithSkills(user.id);
+      this.logger.log(`User created: ${user.id}`);
       return ResponseUserDto.fromEntity(userWithSkills!, userWithSkills!.skills);
     } catch (err) {
       // v2: bij elke fout (DB-constraint, netwerk, etc.) worden alle writes teruggedraaid.
@@ -77,6 +82,7 @@ export class UsersService {
   }
 
   async getMatches(userId: string): Promise<ResponseMatchDto[]> {
+    this.logger.log(`Computing matches for user ${userId}`);
     const target = await this.userRepo.findByIdWithSkills(userId);
     if (!target) {
       throw new NotFoundException(`User with id ${userId} not found`);

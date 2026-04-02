@@ -1,6 +1,6 @@
 // Matching leeft in users/ omdat het momenteel enkel de user-match endpoint bedient.
 // Verplaats naar src/matching/ als het AI-scoring, gewichten of cross-feature queries krijgt.
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { User } from '../infrastructure/user.entity';
 import { Skill } from '../../skills/infrastructure/skill.entity';
 
@@ -20,18 +20,21 @@ import { Skill } from '../../skills/infrastructure/skill.entity';
 // Zonder dit kan UsersService deze class niet ontvangen in zijn constructor.
 @Injectable()
 export class MatchingService {
+  private readonly logger = new Logger(MatchingService.name);
 
   computeMatches(
     target: User,   // de user waarvoor we matches zoeken
     others: User[], // alle andere users (al gefilterd buiten deze methode)
   ): Array<{ user: User; skills: Skill[]; score: number }> {
 
+    const start = Date.now();
+
     // Stap 1: verzamel de skill-ids van de target user in een Set.
     // Set = HashSet<string> — geen duplicaten, .has() is O(1) vs O(n) bij array.
     // Dankzij ManyToMany is user.skills direct een Skill[], geen wrapper object meer.
     const targetSkillIds = new Set(target.skills.map((s) => s.id));
 
-    return others
+    const results = others
       // Stap 2: transformeer elke andere user naar een object met score.
       .map((other) => {
         // Zelfde als targetSkillIds maar voor deze andere user.
@@ -60,5 +63,11 @@ export class MatchingService {
 
       // Sorteer van hoog naar laag (descending).
       .sort((a, b) => b.score - a.score);
+
+    this.logger.log(
+      `Computed matches in ${Date.now() - start}ms — ${others.length} candidates → ${results.length} matches`,
+    );
+
+    return results;
   }
 }
