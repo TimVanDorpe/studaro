@@ -2,8 +2,6 @@ import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../infrastructure/user.entity';
 import { Skill } from '../../skills/infrastructure/skill.entity';
 
-// The static fromEntity() factory method converts a raw DB entity into a clean response.
-// This ensures internal DB details never leak to the outside.
 export class ResponseUserDto {
   @ApiProperty({ example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
   id: string;

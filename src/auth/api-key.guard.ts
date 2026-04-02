@@ -1,8 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
-// A Guard in NestJS decides whether a request is allowed to proceed. This guard reads the X-API-Key header and
-// compares it with the value in .env.
 
 // Important: we use @UseGuards(ApiKeyGuard) (the class itself, not new ApiKeyGuard()), so that
 // NestJS's DI system can inject ConfigService.

@@ -5,9 +5,6 @@ import { CreateUserDto } from '../model/create-user.dto';
 import { ResponseUserDto } from '../model/response-user.dto';
 import { ResponseMatchDto } from '../model/response-match.dto';
 
-// Manages two endpoints under the /users path:
-// - POST /users              → create a new user with skills
-// - GET  /users/:id/matches  → return sorted skill matches for a user
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
@@ -20,7 +17,6 @@ export class UsersController {
     return this.usersService.getAllUsers();
   }
 
-  // The @Body() decorator extracts the request body and validates it via CreateUserDto.
   @ApiOperation({ summary: 'Create a new user with skills' })
   @ApiResponse({ status: 201, type: ResponseUserDto })
   @ApiResponse({ status: 400, description: 'Invalid input (validation failed)' })

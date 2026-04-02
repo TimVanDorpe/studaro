@@ -58,7 +58,6 @@ export class UsersService {
     try {
       const user = await this.userRepo.create(dto.name, dto.email, queryRunner);
 
-      // For each skill: find or create, and link via the ManyToMany junction table.
       for (const skillName of dto.skills) {
         const skill = await this.skillRepo.findOrCreate(skillName, queryRunner);
         await this.userRepo.addSkill(user.id, skill.id, queryRunner);
@@ -67,7 +66,6 @@ export class UsersService {
       // v2: only after all writes is the transaction committed to the DB.
       await queryRunner.commitTransaction();
 
-      // Reload the user including its skills via the ManyToMany relation.
       const userWithSkills = await this.userRepo.findByIdWithSkills(user.id);
       this.logger.log(`User created: ${user.id}`);
       return ResponseUserDto.fromEntity(userWithSkills!, userWithSkills!.skills);
