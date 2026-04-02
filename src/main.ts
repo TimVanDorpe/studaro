@@ -6,10 +6,10 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Allow requests from the Vite dev server (port 5173).
+  // CORS_ORIGIN must be set in .env (e.g. http://localhost:5173 for the Vite dev server).
   // X-API-Key is passed through so the ApiKeyGuard can read it.
   app.enableCors({
-    origin: 'http://localhost:5173',
+    origin: process.env.CORS_ORIGIN,
     allowedHeaders: ['Content-Type', 'X-API-Key'],
   });
 
