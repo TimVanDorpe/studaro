@@ -10,7 +10,7 @@ import { Skill } from './skill.entity';
 // - findAllWithUserCount — one SQL query with a LEFT JOIN and GROUP BY to count the number
 //   of users per skill. More efficient than running a separate query for each skill.
 //
-// v2: findOrCreate now uses a DB-level upsert (INSERT ... ON CONFLICT DO NOTHING)
+// v2: findOrCreate uses a DB-level upsert (INSERT ... ON CONFLICT DO NOTHING)
 // instead of a separate SELECT followed by an INSERT.
 // Problem before v2 (race condition): two concurrent POST /users requests with
 // the same new skill both passed the findOne check (both saw: not found),
@@ -18,6 +18,7 @@ import { Skill } from './skill.entity';
 // the 'name' column in the skills table.
 // Now: PostgreSQL handles the conflict atomically at the DB level. The second INSERT does
 // nothing (DO NOTHING) and we then read the existing row back via findOne.
+// findOrCreate requires a QueryRunner to run within the same transaction as the caller.
 
 @Injectable()
 export class SkillRepository {
@@ -26,11 +27,9 @@ export class SkillRepository {
     private readonly repo: Repository<Skill>,
   ) {}
 
-  // v2: queryRunner parameter added so this method can run within the transaction of
-  // UsersService.createUser() — same connection as the user insert.
-  async findOrCreate(name: string, queryRunner?: QueryRunner): Promise<Skill> {
+  async findOrCreate(name: string, queryRunner: QueryRunner): Promise<Skill> {
     const normalized = name.toLowerCase();
-    const manager = queryRunner ? queryRunner.manager : this.repo.manager;
+    const manager = queryRunner.manager;
 
     // v2: INSERT ... ON CONFLICT DO NOTHING — atomic upsert at the DB level.
     // If the skill already exists, PostgreSQL does nothing and the existing row remains intact.

@@ -13,10 +13,8 @@ import { User } from './user.entity';
 // - addSkill — adds a skill to the junction table via the TypeORM relation API,
 //   without needing to load the full user entity.
 //
-// v2: create() and addSkill() accept an optional QueryRunner.
-// When a QueryRunner is provided, the method executes its query within
-// the active transaction of that runner. Without a QueryRunner everything works as before v2
-// (auto-commit, independent of any transaction).
+// v2: create() and addSkill() require a QueryRunner so both execute within
+// the same transaction as the caller (UsersService.createUser).
 
 @Injectable()
 export class UserRepository {
@@ -36,19 +34,15 @@ export class UserRepository {
     return this.repo.findOne({ where: { email } });
   }
 
-  // v2: queryRunner parameter added. When provided, this method uses the
-  // manager of the active transaction so the INSERT becomes part of that transaction.
-  async create(name: string, email: string, queryRunner?: QueryRunner): Promise<User> {
-    const manager = queryRunner ? queryRunner.manager : this.repo.manager;
+  async create(name: string, email: string, queryRunner: QueryRunner): Promise<User> {
+    const manager = queryRunner.manager;
     return manager.save(User, manager.create(User, { name, email }));
   }
 
-  // v2: queryRunner parameter added. The relation query is executed via the
-  // manager of the active transaction — the same connection as create() above.
   // Adds a skill to the ManyToMany junction table without loading the full
   // user entity. TypeORM translates this into an INSERT into 'user_skills'.
-  async addSkill(userId: string, skillId: string, queryRunner?: QueryRunner): Promise<void> {
-    const manager = queryRunner ? queryRunner.manager : this.repo.manager;
+  async addSkill(userId: string, skillId: string, queryRunner: QueryRunner): Promise<void> {
+    const manager = queryRunner.manager;
     await manager
       .createQueryBuilder()
       .relation(User, 'skills')
