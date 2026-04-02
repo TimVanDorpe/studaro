@@ -11,7 +11,8 @@ export class ResponseMatchDto {
 
   @ApiProperty({
     example: 0.67,
-    description: 'Jaccard score between 0.0 (no overlap) and 1.0 (identical skills)',
+    description:
+      'Jaccard score between 0.0 (no overlap) and 1.0 (identical skills)',
   })
   score: number;
 

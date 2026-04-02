@@ -48,19 +48,21 @@ export class SkillRepository {
     return manager.findOneOrFail(Skill, { where: { name: normalized } });
   }
 
-  async findAllWithUserCount(): Promise<Array<{ id: string; name: string; userCount: string }>> {
+  async findAllWithUserCount(): Promise<
+    Array<{ id: string; name: string; userCount: string }>
+  > {
     // Direct JOIN on the junction table 'user_skills' — avoids the extra JOIN to the users table
     // since we only need a COUNT of rows, not any user columns.
-      // SELECT skill.id AS id, skill.name AS name, COUNT(us.user_id) AS "userCount"
-      // FROM skills skill
-      // LEFT JOIN user_skills us ON us.skill_id = skill.id
-      // GROUP BY skill.id
+    // SELECT skill.id AS id, skill.name AS name, COUNT(us."usersId") AS "userCount"
+    // FROM skills skill
+    // LEFT JOIN user_skills us ON us."skillsId" = skill.id
+    // GROUP BY skill.id
     return this.repo
       .createQueryBuilder('skill')
       .select('skill.id', 'id')
       .addSelect('skill.name', 'name')
-      .addSelect('COUNT(us.user_id)', 'userCount')
-      .leftJoin('user_skills', 'us', 'us.skill_id = skill.id')
+      .addSelect('COUNT(us."usersId")', 'userCount')
+      .leftJoin('user_skills', 'us', 'us."skillsId" = skill.id')
       .groupBy('skill.id')
       .getRawMany();
   }

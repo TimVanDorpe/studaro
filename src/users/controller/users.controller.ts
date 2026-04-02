@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+} from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from '../service/users.service';
 import { CreateUserDto } from '../model/create-user.dto';
@@ -19,19 +26,26 @@ export class UsersController {
 
   @ApiOperation({ summary: 'Create a new user with skills' })
   @ApiResponse({ status: 201, type: ResponseUserDto })
-  @ApiResponse({ status: 400, description: 'Invalid input (validation failed)' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input (validation failed)',
+  })
   @ApiResponse({ status: 409, description: 'Email is already in use' })
   @Post()
   createUser(@Body() dto: CreateUserDto): Promise<ResponseUserDto> {
     return this.usersService.createUser(dto);
   }
 
-  @ApiOperation({ summary: 'Return skill matches for a user, sorted by Jaccard score' })
+  @ApiOperation({
+    summary: 'Return skill matches for a user, sorted by Jaccard score',
+  })
   @ApiParam({ name: 'id', description: 'UUID of the user' })
   @ApiResponse({ status: 200, type: [ResponseMatchDto] })
   @ApiResponse({ status: 404, description: 'User not found' })
   @Get(':id/matches')
-  getMatches(@Param('id', ParseUUIDPipe) id: string): Promise<ResponseMatchDto[]> {
+  getMatches(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<ResponseMatchDto[]> {
     return this.usersService.getMatches(id);
   }
 }

@@ -10,10 +10,17 @@ export class ResponseSkillDto {
   // Important detail: PostgreSQL's COUNT() function always returns a string,
   // even when the value is a number. That is why we use parseInt(row.userCount, 10)
   // — otherwise the API would return "userCount": "5" instead of "userCount": 5.
-  @ApiProperty({ example: 42, description: 'Number of users that have this skill' })
+  @ApiProperty({
+    example: 42,
+    description: 'Number of users that have this skill',
+  })
   userCount: number;
 
-  static fromRaw(row: { id: string; name: string; userCount: string }): ResponseSkillDto {
+  static fromRaw(row: {
+    id: string;
+    name: string;
+    userCount: string;
+  }): ResponseSkillDto {
     const dto = new ResponseSkillDto();
     dto.id = row.id;
     dto.name = row.name;

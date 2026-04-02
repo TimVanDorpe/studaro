@@ -1,4 +1,10 @@
-import { ArrayNotEmpty, IsArray, IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 // DTO for creating a user. The class-validator decorators are

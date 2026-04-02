@@ -76,17 +76,25 @@ describe('UsersService', () => {
   describe('createUser', () => {
     it('creates user and associates skill', async () => {
       const skill = makeSkill('s1', 'typescript');
-      const user = makeUser('u1', 'alice@test.com', ['s1']);
+      makeUser('u1', 'alice@test.com', ['s1']);
 
       userRepo.findByEmail.mockResolvedValue(null);
-      userRepo.create.mockResolvedValue({ id: 'u1', name: 'Alice', email: 'alice@test.com' });
+      userRepo.create.mockResolvedValue({
+        id: 'u1',
+        name: 'Alice',
+        email: 'alice@test.com',
+      });
       skillRepo.findOrCreate.mockResolvedValue(skill);
       userRepo.addSkill.mockResolvedValue(undefined);
       const userWithSkills = makeUser('u1', 'alice@test.com', []);
       userWithSkills.skills = [skill];
       userRepo.findByIdWithSkills.mockResolvedValue(userWithSkills);
 
-      const result = await service.createUser({ name: 'Alice', email: 'alice@test.com', skills: ['typescript'] });
+      const result = await service.createUser({
+        name: 'Alice',
+        email: 'alice@test.com',
+        skills: ['typescript'],
+      });
 
       expect(result.id).toBe('u1');
       expect(result.skills).toContain('typescript');
@@ -104,16 +112,26 @@ describe('UsersService', () => {
       userRepo.addSkill.mockResolvedValue(undefined);
       userRepo.findByIdWithSkills.mockResolvedValue(user);
 
-      await service.createUser({ name: 'Alice', email: 'alice@test.com', skills: ['typescript', 'react'] });
+      await service.createUser({
+        name: 'Alice',
+        email: 'alice@test.com',
+        skills: ['typescript', 'react'],
+      });
 
       expect(skillRepo.findOrCreate).toHaveBeenCalledTimes(2);
     });
 
     it('throws ConflictException for duplicate email', async () => {
-      userRepo.findByEmail.mockResolvedValue(makeUser('u1', 'alice@test.com', []));
+      userRepo.findByEmail.mockResolvedValue(
+        makeUser('u1', 'alice@test.com', []),
+      );
 
       await expect(
-        service.createUser({ name: 'Alice', email: 'alice@test.com', skills: ['typescript'] }),
+        service.createUser({
+          name: 'Alice',
+          email: 'alice@test.com',
+          skills: ['typescript'],
+        }),
       ).rejects.toThrow(ConflictException);
     });
   });
@@ -149,7 +167,9 @@ describe('UsersService', () => {
     it('throws NotFoundException when user does not exist', async () => {
       userRepo.findByIdWithSkills.mockResolvedValue(null);
 
-      await expect(service.getMatches('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.getMatches('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

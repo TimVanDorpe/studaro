@@ -1,4 +1,9 @@
-import { ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { UserRepository } from '../infrastructure/user.repository';
 import { SkillRepository } from '../../skills/infrastructure/skill.repository';
@@ -42,7 +47,9 @@ export class UsersService {
     this.logger.log(`Creating user ${dto.name} (${dto.email})`);
     const existing = await this.userRepo.findByEmail(dto.email);
     if (existing) {
-      throw new ConflictException(`User with email ${dto.email} already exists`);
+      throw new ConflictException(
+        `User with email ${dto.email} already exists`,
+      );
     }
 
     // v2: QueryRunner wraps the entire createUser flow in one DB transaction.
@@ -68,7 +75,10 @@ export class UsersService {
 
       const userWithSkills = await this.userRepo.findByIdWithSkills(user.id);
       this.logger.log(`User created: ${user.id}`);
-      return ResponseUserDto.fromEntity(userWithSkills!, userWithSkills!.skills);
+      return ResponseUserDto.fromEntity(
+        userWithSkills!,
+        userWithSkills!.skills,
+      );
     } catch (err) {
       // v2: on any error (DB constraint, network, etc.) all writes are rolled back.
       await queryRunner.rollbackTransaction();

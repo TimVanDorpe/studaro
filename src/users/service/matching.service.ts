@@ -19,10 +19,9 @@ export class MatchingService {
   private readonly logger = new Logger(MatchingService.name);
 
   computeMatches(
-    target: User,   
+    target: User,
     others: User[],
   ): Array<{ user: User; skills: Skill[]; score: number }> {
-
     const start = Date.now();
 
     // Step 1: collect the skill IDs of the target user into a Set.
@@ -39,7 +38,7 @@ export class MatchingService {
         // INTERSECTION — skills that both users share. This is the Jaccard numerator (∩).
         // [...targetSkillIds] spreads the Set into an array so .filter() is available.
         const intersection = new Set(
-          [...targetSkillIds].filter((id) => otherSkillIds.has(id))
+          [...targetSkillIds].filter((id) => otherSkillIds.has(id)),
         );
 
         // UNION — all skills of both users combined. This is the Jaccard denominator (∪).

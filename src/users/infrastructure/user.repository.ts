@@ -34,14 +34,22 @@ export class UserRepository {
     return this.repo.findOne({ where: { email } });
   }
 
-  async create(name: string, email: string, queryRunner: QueryRunner): Promise<User> {
+  async create(
+    name: string,
+    email: string,
+    queryRunner: QueryRunner,
+  ): Promise<User> {
     const manager = queryRunner.manager;
     return manager.save(User, manager.create(User, { name, email }));
   }
 
   // Adds a skill to the ManyToMany junction table without loading the full
   // user entity. TypeORM translates this into an INSERT into 'user_skills'.
-  async addSkill(userId: string, skillId: string, queryRunner: QueryRunner): Promise<void> {
+  async addSkill(
+    userId: string,
+    skillId: string,
+    queryRunner: QueryRunner,
+  ): Promise<void> {
     const manager = queryRunner.manager;
     await manager
       .createQueryBuilder()
