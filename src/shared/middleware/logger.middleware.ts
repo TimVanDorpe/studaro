@@ -1,0 +1,23 @@
+import { Injectable, NestMiddleware, Logger } from '@nestjs/common';
+import { Request, Response, NextFunction } from 'express';
+
+// Middleware die elke binnenkomende HTTP-request logt met methode, URL, statuscode en duur.
+// Wordt globaal toegepast via AppModule.configure() zodat alle routes gedekt zijn.
+@Injectable()
+export class LoggerMiddleware implements NestMiddleware {
+  private readonly logger = new Logger('HTTP');
+
+  use(req: Request, res: Response, next: NextFunction): void {
+    const { method, originalUrl } = req;
+    const start = Date.now();
+
+    // Luister op het 'finish'-event van de response zodat we de statuscode en duur kennen.
+    res.on('finish', () => {
+      const statusCode = res.statusCode;
+      const duration = Date.now() - start;
+      this.logger.log(`${method} ${originalUrl} ${statusCode} - ${duration}ms`);
+    });
+
+    next();
+  }
+}

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { UsersService } from '../service/users.service';
 import { CreateUserDto } from '../model/create-user.dto';
@@ -16,7 +16,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Geef alle users terug met hun skills' })
   @ApiResponse({ status: 200, type: [ResponseUserDto] })
   @Get()
-  getAllUsers() {
+  getAllUsers(): Promise<ResponseUserDto[]> {
     return this.usersService.getAllUsers();
   }
 
@@ -26,17 +26,16 @@ export class UsersController {
   @ApiResponse({ status: 400, description: 'Ongeldige invoer (validatie mislukt)' })
   @ApiResponse({ status: 409, description: 'Email is al in gebruik' })
   @Post()
-  createUser(@Body() dto: CreateUserDto) {
+  createUser(@Body() dto: CreateUserDto): Promise<ResponseUserDto> {
     return this.usersService.createUser(dto);
   }
 
-  // @Param('id') haalt het :id segment uit de URL op als string.
   @ApiOperation({ summary: 'Geef skill-matches terug voor een user, gesorteerd op Jaccard-score' })
   @ApiParam({ name: 'id', description: 'UUID van de user' })
   @ApiResponse({ status: 200, type: [ResponseMatchDto] })
   @ApiResponse({ status: 404, description: 'User niet gevonden' })
   @Get(':id/matches')
-  getMatches(@Param('id') id: string) {
+  getMatches(@Param('id', ParseUUIDPipe) id: string): Promise<ResponseMatchDto[]> {
     return this.usersService.getMatches(id);
   }
 }
